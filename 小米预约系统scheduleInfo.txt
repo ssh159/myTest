@@ -1,0 +1,29 @@
+create database scheduleInfo;
+
+use scheduleInfo
+
+create table scheduleInfo(
+  sid int primary key auto_increment,
+  productName varchar(20),
+  buyDate date,
+  consignee varchar(8),
+  email varchar(20),
+  mobile varchar(11),
+  address varchar(100));
+
+
+sid	预约号
+productName	商品名
+buyDate	购买时间
+consignee	收货人
+email	邮箱地址
+mobile	手机号
+address	收获地址
+
+insert into scheduleInfo(productName,buyDate,consignee,email,mobile,address) values 
+('小米手机2','2016-10-01','细雨','10343328@qq.com','15934135651','珠海'),
+('小米手机3','2016-10-01','细雨','10234328@qq.com','15931432565','珠海'),
+('红米2','2016-10-01','细雨','1056343328@qq.com','15986314565','珠海'),
+('红米 note3','2016-10-01','细雨','1053246328@qq.com','15981342565','珠海');
+
+

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"    
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"   
+		xmlns:p="http://www.springframework.org/schema/p"  
+		xmlns:aop="http://www.springframework.org/schema/aop"   
+		xmlns:context="http://www.springframework.org/schema/context"  
+		xmlns:jee="http://www.springframework.org/schema/jee"  
+		xmlns:tx="http://www.springframework.org/schema/tx"  
+		xsi:schemaLocation="    
+			http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd  
+			http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd  
+			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
+			http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.2.xsd  
+			http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd">
+	<!-- 类似于财务部门一样，类就是钱，所有需要类的实例都由spring去管理 -->
+	
+	<!-- （本案例不用到，只是用了一个全盘扫描，以上内容只是为了让大家了解它） -->
+	
+	<context:component-scan base-package="xiaomi.."/>
+	<context:property-placeholder location="classpath:jdbc.properties"/>
+	<!-- <tx:annotation-driven transaction-manager="transactionManager"/> -->
+
+	<bean id="myDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="${jdbc.driver}"/>
+		<property name="jdbcUrl" value="${jdbc.url}"/>
+		<property name="user" value="${jdbc.user}"/>
+		<property name="password" value="${jdbc.password}"/>
+		<!-- 每300秒检查所有连接池中的空闲连接 -->
+		<property name="idleConnectionTestPeriod" value="300"/>
+		<!-- 最大空闲时间,900秒内未使用则连接被丢弃。若为0则永不丢弃 -->
+		<property name="maxIdleTime" value="900"/>
+		<!-- 最大连接数 -->
+		<property name="maxPoolSize" value="5"/>
+	</bean>
+	
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="dataSource" ref="myDataSource"/>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.show_sql">false</prop>
+				<prop key="hibernate.format_sql">true</prop>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+				<prop key="hibernate.connection.autocommit">false</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+			</props>
+		</property>
+		<property name="packagesToScan">
+		    <list>
+		        <value>xiaomi.entity</value>
+		    </list>
+		</property>
+
+	</bean>
+	
+	<bean id="transactionManager" 
+		class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+	 	<!--  创建事务管理器, 管理sessionFactory(因为所有的session都是从sessionFactory获取的) -->
+	 	<property name="sessionFactory" ref="sessionFactory" />
+	 </bean>
+	<!--  配置通知, 哪些方法需要切入什么类型的事务 -->	 
+	<tx:advice id="advice" transaction-manager="transactionManager">
+	 	<tx:attributes>
+	 		<tx:method name="add*" propagation="REQUIRED"/>
+	 		<tx:method name="del*" propagation="REQUIRED"/>
+	 		<tx:method name="update*" propagation="REQUIRED"/>
+	 		<tx:method name="*" propagation="SUPPORTS" read-only="true"/>
+	 	</tx:attributes>
+	</tx:advice>
+	 
+	 <!-- 配置切面表达式, 并且让 tx与切面表达式合二为一 -->
+	 <aop:config>
+	 	<!-- 表达式, 定义哪个包的哪些类需要切入事务,但是此处并且没有制定类中哪些方法,需要切入什么样 事务 -->
+	 	<aop:pointcut expression="execution(* xiaomi.dao.*.*(..))" id="pointcut" />
+	 	<aop:advisor advice-ref="advice" pointcut-ref="pointcut"/>
+	 </aop:config>
+</beans>
+			
